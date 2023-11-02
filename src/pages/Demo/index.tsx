@@ -1,7 +1,7 @@
 import { fetchSearchResource } from '@/services/rcc/manager.service';
 import { Button, Form, Input, Pagination, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/es/table';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './index.scss';
 
 const Demo: React.FC = () => {
@@ -18,6 +18,8 @@ const Demo: React.FC = () => {
 
   const pageSizeOptions = [10, 20, 30, 50, 100];
 
+  const mounted = useRef(false);
+
   const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
   };
@@ -31,11 +33,20 @@ const Demo: React.FC = () => {
     const res = await fetchSearchResource(searchModal, pagination);
     await setTableLoading(false);
     if (res) {
-      console.log('searchData res', res);
       setDataSource(res.list);
       setPagination({ total: res.total, page: res.page, per_page: res.per_page });
     }
   };
+
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      searchData();
+    } else {
+      console.log('I am didUpdate');
+    }
+  });
+
   /**
    * @Author: draven.chen draven.chen@rccchina.com
    * @description: 分页
@@ -144,6 +155,17 @@ const Demo: React.FC = () => {
       dataIndex: 'updated_at',
       key: 'updated_at',
     },
+    {
+      title: '操作',
+      render: () => {
+        return (
+          <div className="buttons-flex">
+            <Button>查看</Button>
+            <Button type="primary">修改</Button>
+          </div>
+        );
+      },
+    },
   ];
 
   const ManagerTable: React.FC = () => {
@@ -175,10 +197,12 @@ const Demo: React.FC = () => {
       />
     );
   };
+
   return (
     <div>
       <h1 className="text-red-400">招内抓取平台</h1>
       <FormSearch />
+      <Button type="primary">+ 新建</Button>
       <ManagerTable />
       <RccPagination />
     </div>

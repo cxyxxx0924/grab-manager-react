@@ -1,7 +1,8 @@
 import { fetchSearchResource } from '@/services/rcc/manager.service';
-import { Button, Form, Input, Pagination, Table } from 'antd';
+import { Button, Form, Input, Pagination, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import React, { useState } from 'react';
+import './index.scss';
 
 const Demo: React.FC = () => {
   const [searchModal, setSearchModal] = useState<RCC_API.FormSearchModal>({
@@ -130,7 +131,13 @@ const Demo: React.FC = () => {
       title: '资源链接',
       dataIndex: 'url',
       key: 'url',
-      render: (text: string) => <a href={text}>{text}</a>,
+      render: (text: string) => (
+        <Tooltip placement="topLeft" title={text}>
+          <div className="truncate">
+            <a href={text}>{text}</a>
+          </div>
+        </Tooltip>
+      ),
     },
     {
       title: '创建时间',

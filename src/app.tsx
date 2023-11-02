@@ -27,7 +27,8 @@ export async function getInitialState(): Promise<{
       const msg = await fetchGetUserInfo({
         skipErrorHandler: true,
       });
-      return msg.data;
+      console.log('fetchGetUserInfo msg', msg);
+      return msg;
     } catch (error) {
       history.push(loginPath);
     }
@@ -47,14 +48,14 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
   return {
     actionsRender: () => [<Question key="doc" />, <SelectLang key="SelectLang" />],
     avatarProps: {
-      src: initialState?.currentUser?.avatar,
+      src: 'https://nim.nosdn.127.net/MTAyNTQ0OQ==/bmltYV8xMDk3MTA5ODQzMTJfMTY5NzQxODk5ODQyOV85YTY0ZDEzYS1kN2MzLTQxNDEtYmZmMi02MmQwMjMzMjJiY2Y=?createTime=1697418998926?imageView&thumbnail=80z80',
       title: <AvatarName />,
       render: (_, avatarChildren) => {
         return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
       },
     },
     waterMarkProps: {
-      content: initialState?.currentUser?.name,
+      content: initialState?.currentUser?.username,
     },
     footerRender: () => <Footer />,
     onPageChange: () => {

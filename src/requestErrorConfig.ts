@@ -1,25 +1,38 @@
 ﻿import type { AxiosResponse, RequestOptions } from '@@/plugin-request/request';
 import type { RequestConfig } from '@umijs/max';
-import { message, notification } from 'antd';
+import cookie from 'react-cookies';
 
 // 与后端约定的响应数据格式
 interface ResponseStructure {
-  data: any;
+  data?: any;
   code: number;
   message: string;
-  timestamps: number;
 }
 
 const FETCH_SUCCESS_CODES = [200, 201, 204];
-const FETCH_NEED_LOGIN = [2]
+const FETCH_NEED_LOGIN = [2];
 // const
 
 function fetchSuccess(code: number) {
   return FETCH_SUCCESS_CODES.includes(code);
 }
 
-function fetchNeedLogin(code: number) {
-  return FETCH_NEED_LOGIN.includes(code);
+function fetchRequestSuccess(data: ResponseStructure) {
+  if (data.code === 10000) {
+    return true;
+  }
+  return false;
+}
+
+function fetchNeedLogin(status: number, data: any) {
+  if (fetchSuccess(status) && FETCH_NEED_LOGIN.includes(data.code)) {
+    return true;
+  }
+  return false;
+}
+
+function getSessions() {
+  return cookie.load('_dev_grab_manager_session') || '';
 }
 
 /**
@@ -32,25 +45,27 @@ export const errorConfig: RequestConfig = {
   requestInterceptors: [
     (config: RequestOptions) => {
       // 拦截请求配置，进行个性化处理。
-      const url = config?.url?.concat('?token = 123');
-      return { ...config, url };
+      config.headers = {
+        'Grab-Manager-Authorization': getSessions(),
+      };
+      return { ...config };
     },
   ],
 
   // 响应拦截器
   responseInterceptors: [
-    (response: AxiosResponse<ResponseStructure, any>) => {
+    (response: AxiosResponse) => {
       // 拦截响应数据，进行个性化处理
       // const { data, status } = response.data as unknown as ResponseStructure;
-      const { data, status } = response;
-      console.log('response', response);
-      if(fetchSuccess(status)) {
-        return data
+      const { status } = response;
+      const { data } = response.data as unknown as ResponseStructure;
+      if (fetchNeedLogin(status, data)) {
+        window.location.href = data.path;
+      } else if (!fetchRequestSuccess(response.data)) {
+        return Promise.reject(data);
+      } else {
+        return response.data;
       }
-
-      return {
-        data: null
-      };
     },
   ],
 };

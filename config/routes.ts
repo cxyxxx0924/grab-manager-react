@@ -52,7 +52,7 @@ export default [
     component: './TableList',
   },
   {
-    name: 'demo',
+    name: '招内抓取资源',
     icon: 'table',
     path: '/demo',
     component: './Demo',

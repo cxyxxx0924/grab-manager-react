@@ -10,12 +10,13 @@ declare namespace RCC_API {
   }
 
   interface ManagerItemModal {
-    id: number;
+    id?: number;
     name: string;
     url: string;
-    updated_at: Date;
-    updated_by: string;
+    updated_at?: Date;
+    updated_by?: string;
     external_id: string;
+    external_platform_id: number;
   }
 
   interface FormSearchModal {

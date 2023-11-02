@@ -1,8 +1,13 @@
-import { fetchSearchResource } from '@/services/rcc/manager.service';
-import { Button, Form, Input, Pagination, Table, Tooltip } from 'antd';
+import {
+  fetchCreateResource,
+  fetchSearchResource,
+  fetchUpdateResource,
+} from '@/services/rcc/manager.service';
+import { Button, Form, Input, Modal, Pagination, Table, Tooltip, message } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import React, { useEffect, useRef, useState } from 'react';
 import './index.scss';
+import FormItem from 'antd/es/form/FormItem';
 
 const Demo: React.FC = () => {
   const [searchModal, setSearchModal] = useState<RCC_API.FormSearchModal>({
@@ -17,6 +22,7 @@ const Demo: React.FC = () => {
   const [tableLoading, setTableLoading] = useState<boolean>(false);
 
   const pageSizeOptions = [10, 20, 30, 50, 100];
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const mounted = useRef(false);
 
@@ -42,8 +48,6 @@ const Demo: React.FC = () => {
     if (!mounted.current) {
       mounted.current = true;
       searchData();
-    } else {
-      console.log('I am didUpdate');
     }
   });
 
@@ -127,6 +131,96 @@ const Demo: React.FC = () => {
     );
   };
 
+  const [modalTitle, setModalTitle] = useState<string>('');
+  const initDialogModal = { name: '', url: '', external_id: '', external_platform_id: 1 };
+  const [dialogModal, setDialogModal] = useState<RCC_API.ManagerItemModal>(initDialogModal);
+  const [modalType, setModalType] = useState<'update' | 'create'>('create');
+  /**
+   * @Author: draven.chen draven.chen@rccchina.com
+   * @description: 创建资源
+   * @return {*}
+   */
+  async function handleCreateSource(type: 'create' | 'update', row?: RCC_API.ManagerItemModal) {
+    let newTitle = '';
+    await setModalType(type);
+    if (type === 'create') {
+      newTitle = '新增抓取资源';
+    } else {
+      newTitle = '修改抓取资源';
+      row!.external_platform_id = 1;
+      await setDialogModal(row!);
+    }
+    await setModalTitle(newTitle);
+    setShowModal(true);
+  }
+
+  /**
+   * @Author: draven.chen draven.chen@rccchina.com
+   * @description: 弹窗组件
+   * @return {*}
+   */
+  const RccManagerModal: React.FC = () => {
+    const [modalForm] = Form.useForm<RCC_API.ManagerItemModal>();
+    const handleOk = async () => {
+      // setShowModal(false);
+      await modalForm.validateFields();
+      const submitData = modalForm.getFieldsValue();
+      Object.assign(dialogModal, submitData);
+      if (modalType === 'create') {
+        const ret = await fetchCreateResource(dialogModal);
+        console.log(ret);
+        message.success('创建抓取资源成功');
+      } else if (modalType === 'update') {
+        const ret = await fetchUpdateResource(dialogModal);
+        console.log(ret);
+        message.success('更新抓取资源成功');
+      }
+      setShowModal(false);
+      searchData();
+    };
+    const handleCancel = () => {
+      setShowModal(false);
+      modalForm.resetFields();
+      setDialogModal(initDialogModal);
+    };
+    return (
+      <Modal title={modalTitle} open={showModal} onCancel={handleCancel} onOk={handleOk}>
+        <Form
+          name="basic"
+          form={modalForm}
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={dialogModal}
+        >
+          <FormItem
+            name="name"
+            label="资源名称："
+            rules={[{ required: true, message: '请输入资源名称' }]}
+          >
+            <Input />
+          </FormItem>
+          <FormItem
+            name="url"
+            label="资源链接："
+            rules={[{ required: true, message: '请输入资源链接' }]}
+          >
+            <Input />
+          </FormItem>
+          <FormItem name="description" label="资源描述：">
+            <Input />
+          </FormItem>
+          <FormItem
+            name="external_id"
+            label="栏目ID："
+            rules={[{ required: true, message: '请输入栏目ID' }]}
+          >
+            <Input />
+          </FormItem>
+        </Form>
+      </Modal>
+    );
+  };
+
   const columns: ColumnsType<RCC_API.ManagerItemModal> = [
     {
       title: '资源名称',
@@ -157,11 +251,13 @@ const Demo: React.FC = () => {
     },
     {
       title: '操作',
-      render: () => {
+      render: (row: RCC_API.ManagerItemModal) => {
         return (
           <div className="buttons-flex">
             <Button>查看</Button>
-            <Button type="primary">修改</Button>
+            <Button type="primary" onClick={() => handleCreateSource('update', row)}>
+              修改
+            </Button>
           </div>
         );
       },
@@ -202,9 +298,12 @@ const Demo: React.FC = () => {
     <div>
       <h1 className="text-red-400">招内抓取平台</h1>
       <FormSearch />
-      <Button type="primary">+ 新建</Button>
+      <Button type="primary" onClick={() => handleCreateSource('create')}>
+        + 新建
+      </Button>
       <ManagerTable />
       <RccPagination />
+      <RccManagerModal />
     </div>
   );
 };

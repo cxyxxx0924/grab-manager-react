@@ -16,3 +16,31 @@ export async function fetchSearchResource(
     },
   );
 }
+/**
+ * @Author: draven.chen draven.chen@rccchina.com
+ * @description: 创建抓取资源
+ * @param {RCC_API} createForm
+ * @return {*}
+ */
+export async function fetchCreateResource(createForm: RCC_API.ManagerItemModal) {
+  return request('/api/v1/resource/create_resource', {
+    method: 'post',
+    data: {
+      ...createForm,
+    },
+  });
+}
+/**
+ * @Author: draven.chen draven.chen@rccchina.com
+ * @description: 更新抓取资源信息
+ * @param {RCC_API} updateForm
+ * @return {*}
+ */
+export async function fetchUpdateResource(updateForm: RCC_API.ManagerItemModal) {
+  return request('/api/v1/resource/update_resource', {
+    method: 'post',
+    data: {
+      ...updateForm,
+    },
+  });
+}
